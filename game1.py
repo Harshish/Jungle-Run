@@ -2,36 +2,48 @@ import pygame as pg
 import sys,random,os
 from pygame.locals import * 
 
-title = pg.image.load(os.path.join("res/title2.png"))
+title = pg.image.load(os.path.join("res/title3.png"))
 background = pg.image.load(os.path.join("res/back.jpg"))
 background2 = pg.image.load(os.path.join("res/back2.png"))
 startBtn = pg.image.load(os.path.join("res/start_button3.png"))
 exitBtn = pg.image.load(os.path.join("res/exit_button3.png"))
+continueBtn = pg.image.load(os.path.join("res/continue_button.png"))
 restartBtn = pg.image.load(os.path.join("res/restart_button2.png"))
 startBtnHvr = pg.image.load(os.path.join("res/start_button_hover2.png"))
 exitBtnHvr = pg.image.load(os.path.join("res/exit_button_hover2.png"))
+continueBtnHvr = pg.image.load(os.path.join("res/continue_button_hover.png"))
 restartBtnHvr = pg.image.load(os.path.join("res/restart_button_hover2.png"))
 hole = pg.image.load(os.path.join("res/hole3.png"))
 gameover = pg.image.load(os.path.join("res/gameover.png"))
+life_img = pg.image.load(os.path.join("res/life.png"))
 
 stand = pg.image.load(os.path.join("res/player/PNG/Player/Poses/player_stand.png"))
 jump = pg.image.load(os.path.join("res/player/PNG/Player/Poses/player_jump.png"))
 hurt = pg.image.load(os.path.join("res/player/PNG/Player/Poses/player_hurt.png"))
+duck = pg.image.load(os.path.join("res/player/PNG/Player/Poses/player_duck.png"))
 walk = ["res/player/PNG/Player/Poses/player_walk1.png","res/player/PNG/Player/Poses/player_walk2.png"]
 
-hit_sound = "audio/collision.mp3"
-background_music = "audio/8bitloop.mp3"
-gameover_sound = "audio/gameover.mp3"
+bird_dead = pg.image.load(os.path.join("res/bird/dead.png"))
+bird_anim = ["res/bird/fly1.png","res/bird/fly2.png","res/bird/fly3.png","res/bird/fly4.png"]
 
+hit_sound = "audio/gameover2.mp3"
+background_music = "audio/8bitloop.mp3"
+gameover_sound = "audio/gameover2.mp3"
+
+title = pg.transform.scale(title,(500,100))
+bird_dead = pg.transform.scale(bird_dead,(100,50))
+life_img = pg.transform.scale(life_img,(30,30))
 hole = pg.transform.scale(hole,(100,50))
 gameover = pg.transform.scale(gameover,(800,450))
 background = pg.transform.scale(background,(800,450))
 background2 = pg.transform.scale(background2,(800,450))
 startBtn = pg.transform.scale(startBtn, (100, 50))
 exitBtn = pg.transform.scale(exitBtn, (100, 50))
+continueBtn = pg.transform.scale(continueBtn, (150, 50))
 restartBtn = pg.transform.scale(restartBtn, (150, 50))
 startBtnHvr = pg.transform.scale(startBtnHvr, (100, 50))
 exitBtnHvr = pg.transform.scale(exitBtnHvr, (100, 50))
+continueBtnHvr = pg.transform.scale(continueBtnHvr, (150, 50))
 restartBtnHvr = pg.transform.scale(restartBtnHvr, (150, 50))
 
 class startmenu():
@@ -40,10 +52,11 @@ class startmenu():
         self.click0, self.loads = False, False
 
     def mainloop(self):
-        play_sound(background_music,True)
+        #play_sound(background_music,True)
         while True:
             self.screen.blit(background2,background2.get_rect())
-            self.screen.blit(title,(130,150))
+            self.screen.blit(title,(148,100))
+            #make_text(self.screen, 400, 100, "JUNGLE RUN", color = (130, 82, 1), size = 100, a = True)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     sys.exit()
@@ -58,6 +71,7 @@ class startmenu():
                     self.click0 = True
                 if self.click0 == True:
                     if click[0] == 0:
+                        play_sound(background_music,True)
                         self.start()
                         self.click0 = False
             elif (550+pos[2]) > mouse[0] > 550 and (pos[1]+pos[3]) > mouse[1] > pos[1]:
@@ -90,25 +104,23 @@ class game():
         self.speed = speed
         self.timer = 0.0
         self.hole_spawn_rate = 1000
+        self.bird_spawn_rate = 1000
         self.screen.blit(background2,background2.get_rect())
         self.plr = player(self.screen)
+        self.brd = None
         self.holes = []
+        self.dead_bird = []
+        self.lives = 3
         self.score = 0
+        self.distance = 0
         self.click0 = False
-
-    def make_text(self, x, y, text, size=20, color = (0,0,0), a = False):
-        txts = pg.font.SysFont('Courier New', size).render(text, True, color)
-        txtrect = txts.get_rect()
-        txtrect.topleft = (x,y)
-        if a == True:
-            txtrect.center = (x,y)
-        self.screen.blit(txts, txtrect)
 
     def loop(self):
         self.game_over = False
         x = 0
         hpos = 830
         while self.game_over != True:
+            #BACKGROUND
             x -= self.speed
             xrel = x % background2.get_rect().width
             if xrel==0:
@@ -116,11 +128,47 @@ class game():
             self.screen.blit(background2,(xrel,0))
             self.screen.blit(background2,(-(background2.get_rect().width - xrel),0))
 
+            #PLAYER
             self.plr.update()
-            self.make_text(400, 50, str(self.score) + "m", color = (0,0,0), size = 50, a = True)
 
+            #BIRD
+            if (pg.time.get_ticks() - self.timer) > self.bird_spawn_rate and self.brd==None:
+                height = random.randrange(50,300)
+                if self.plr.protection==True:
+                    self.plr.protection = False
+                self.brd = bird(self.screen,height)
+
+            if self.brd!=None:
+                self.brd.update()
+                if self.brd.x < -(self.brd.bfly.get_rect().width):
+                    self.brd = None
+            
+            for b in self.dead_bird:
+                self.screen.blit(bird_dead,(b.x,b.y))    
+                b.y += 1
+                if b.y == 320:
+                    self.dead_bird.remove(b)
+
+            #HUD
+            bird_k = pg.image.load(os.path.join(bird_anim[0]))
+            bird_k = pg.transform.scale(bird_k,(50,30))
+            if self.lives==3:
+                self.screen.blit(life_img,(30,50))
+                self.screen.blit(life_img,(30 + life_img.get_rect().width,50))
+                self.screen.blit(life_img,(30 + 2 * life_img.get_rect().width ,50))
+            elif self.lives==2:
+                self.screen.blit(life_img,(30,50))
+                self.screen.blit(life_img,(30 + life_img.get_rect().width,50))
+            elif self.lives==1:
+                self.screen.blit(life_img,(30,50))
+            self.screen.blit(bird_k,(350,30))
+            make_text(self.screen,80, 30, "LIVES", color = (0,0,0), size=38, a = True)
+            make_text(self.screen,380 + bird_k.get_rect().width, 50, "X" + str(self.score), color = (0,0,0), size=40, a = True)
+            make_text(self.screen, 700, 50, str(self.distance) + "m", color = (0,0,0), size = 40, a = True)
+
+            #HOLES
             if (pg.time.get_ticks() - self.timer) > self.hole_spawn_rate:
-                self.score += 1
+                self.distance += 1
                 gap = random.randrange(100,800) 
                 if len(self.holes) == 0:       
                     self.holes.append(cavity(self.screen,hpos + gap))
@@ -141,16 +189,35 @@ class game():
                 else:
                     h.update()
 
+            #COLLISION
             player_rect = pg.Rect(self.plr.pwalk.get_rect())
             player_rect.left = self.plr.x
             player_rect.top = self.plr.y
             for h in self.holes:
-                hole_rect = pg.Rect(h.rect)
-                hole_rect.left = h.x
-                hole_rect.top = h.y
-                if player_rect.colliderect(hole_rect):
+                hole_rect = pg.Rect((h.x + 50,h.y),(5,50))
+                if player_rect.colliderect(hole_rect) and self.plr.protection==False:
                     play_sound(hit_sound)
-                    self.game_over = self.restartScreen(xrel)       
+                    self.lives -= 1
+                    self.game_over = self.restartScreen(xrel)   
+                    if self.game_over==False:
+                        self.plr.protection = True  
+                        self.timer = pg.time.get_ticks()
+
+            if self.brd!=None:
+                bird_rect = pg.Rect((self.brd.x + 20,self.brd.y + 10),(50,20))
+                if player_rect.colliderect(bird_rect) and self.plr.protection==False:
+                    if player_rect.top + player_rect.height/2 > bird_rect.top:
+                        play_sound(hit_sound)
+                        self.lives -= 1
+                        self.game_over = self.restartScreen(xrel)  
+                        if self.game_over==False:
+                            self.plr.protection = True  
+                            self.timer = pg.time.get_ticks()  
+                    else:
+                        self.score += 1
+                        self.dead_bird.append(self.brd)
+                        self.brd = None
+
             pg.display.update()
 
     def restartScreen(self,xrel):
@@ -159,9 +226,11 @@ class game():
             self.screen.blit(background2,(-(background2.get_rect().width - xrel),0))
             self.screen.blit(hurt,(self.plr.x,self.plr.y))
             for h in self.holes:
-                self.screen.blit(hole,(h.x,h.y))        
+                self.screen.blit(hole,(h.x,h.y))     
+            if self.brd!=None:
+                self.screen.blit(self.brd.bfly,(self.brd.x,self.brd.y))       
             self.screen.blit(gameover,gameover.get_rect())
-            self.make_text(400, 50, "Score: " + str(self.score) + "m", color = (255,255,255), size = 50, a = True)
+            make_text(self.screen, 400, 50, "Score: " + str(self.score * 30 + self.distance) + " pts", color = (255,255,255), size = 50, a = True)
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -170,7 +239,10 @@ class game():
             pos = (150, 300,100,50)
             mouse = pg.mouse.get_pos()
             if (pos[0]+pos[2]+50) > mouse[0] > pos[0] and (pos[1]+pos[3]) > mouse[1] > pos[1]:
-                self.screen.blit(restartBtnHvr,(150, 300,150,50))
+                if self.lives==0:
+                    self.screen.blit(restartBtnHvr,(150, 300,150,50))
+                else:
+                    self.screen.blit(continueBtnHvr,(150, 300,150,50))
                 self.screen.blit(exitBtn,(550, 300,100,50))
                 click = pg.mouse.get_pressed()
                 if click[0] == 1:
@@ -178,10 +250,17 @@ class game():
                 if self.click0 == True:
                     if click[0] == 0:
                         self.click0 = False
-                        play_sound(background_music,True)
-                        return True
+                        #self.lives -= 1
+                        if self.lives==0:
+                            return True
+                        else:
+                            play_sound(background_music,True)
+                            return False
             elif (550+pos[2]) > mouse[0] > 550 and (pos[1]+pos[3]) > mouse[1] > pos[1]:
-                self.screen.blit(restartBtn,(150, 300,150,50))
+                if self.lives==0:
+                    self.screen.blit(restartBtn,(150, 300,150,50))
+                else:
+                    self.screen.blit(continueBtn,(150, 300,150,50))
                 self.screen.blit(exitBtnHvr,(550, 300,100,50))
                 click = pg.mouse.get_pressed()
                 if click[0] == 1:
@@ -191,7 +270,10 @@ class game():
                         self.click0 = False
                         sys.exit()
             else:
-                self.screen.blit(restartBtn,(150, 300,150,50))
+                if self.lives==0:
+                    self.screen.blit(restartBtn,(150, 300,150,50))
+                else:
+                    self.screen.blit(continueBtn,(150, 300,150,50))
                 self.screen.blit(exitBtn,(550, 300,100,50))
 
             pg.display.update()
@@ -205,6 +287,8 @@ class player():
         self.y = 235
         self.counter = 0
         self.jumping = False
+        self.protection = False
+        self.ducking = False
         self.velocity = [-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
         self.velocity_index = 0
         self.timer = 0.0
@@ -232,8 +316,13 @@ class player():
                     self.jumping = False
                 self.jump_timer = pg.time.get_ticks()
 
-        self.keys = self.get_user_input()
-        self.handle_events()
+        if self.ducking == True:
+            self.pwalk = duck
+            self.y -= 10
+            self.ducking = False
+
+        #self.keys = self.get_user_input()
+        self.handle_events(self.get_user_input())
         
         self.screen.blit(self.pwalk,(self.x,self.y))
 
@@ -244,25 +333,47 @@ class player():
         keys = pg.key.get_pressed()
         return keys
 
-    def handle_events(self):
+    def handle_events(self,keys):
         x = self.x
         y = self.y
         vel = 2
-        if self.keys[pg.K_UP] and self.jumping== False:
+        if keys[pg.K_UP] and self.jumping== False:
             self.jumping = True
-        elif self.keys[pg.K_RIGHT] and x + vel + stand.get_rect().width < 800:
+        elif keys[pg.K_RIGHT] and x + vel + stand.get_rect().width < 800:
             self.x += vel
-        elif self.keys[pg.K_LEFT] and x - vel > 0:
+        elif keys[pg.K_LEFT] and x - vel > 0:
             self.x -= vel
-        elif self.keys[pg.K_DOWN] and y + vel < 235:
-            self.y += vel
+        elif keys[pg.K_DOWN]:
+            if y + vel < 235:
+                self.y += vel
+            else:
+                self.y += 10
+                self.ducking = True
         else:
             pass
+
+class bird():
+    def __init__(self,screen,distance):
+        self.screen = screen
+        self.y = distance
+        self.x = 820
+        self.timer = 0.0
+        self.counter = 0
+        self.bird_fly_speed = 60
+
+    def update(self):
+        self.x -= 1
+        self.bfly = pg.image.load(bird_anim[self.counter])
+        self.bfly = pg.transform.scale(self.bfly,(100,50))
+        if (pg.time.get_ticks() - self.timer) > self.bird_fly_speed:
+            self.counter = (self.counter + 1) % len(bird_anim) 
+            self.timer = pg.time.get_ticks()
+        
+        self.screen.blit(self.bfly,(self.x,self.y))
 
 class cavity:
     def __init__(self,screen,distance):
         self.screen = screen
-        self.rect = hole.get_rect()
         self.x = distance
         self.y = 340
         self.timer = 0.0
@@ -275,6 +386,14 @@ def start(speed,size):
     global g
     g = game(speed)
     g.loop()
+
+def make_text(screen,x, y, text, size=20, color = (0,0,0), a = False):
+    txts = pg.font.SysFont('Courier New', size).render(text, True, color)
+    txtrect = txts.get_rect()
+    txtrect.topleft = (x,y)
+    if a == True:
+        txtrect.center = (x,y)
+    screen.blit(txts, txtrect)
 
 def play_sound(link,inf=False):
     pg.mixer.music.load(link)
