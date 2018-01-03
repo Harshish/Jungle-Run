@@ -28,6 +28,7 @@ class startmenu():
                     self.click0 = True
                 if self.click0 == True:
                     if click[0] == 0:
+                        self.characterSelect()
                         play_sound(background_music,True)
                         self.start()
                         self.click0 = False
@@ -45,6 +46,52 @@ class startmenu():
                 self.screen.blit(startBtn,(150, 300,100,50))
                 self.screen.blit(exitBtn,(550, 300,100,50))
 
+            pg.display.update()
+
+    def characterSelect(self):
+        selected = False
+        greenHorn = stand
+        gh = pg.image.load(os.path.join("res/green_horn.png"))
+        sleepWalker = pg.image.load(os.path.join(character[1]["stand"]))
+        sw = pg.image.load(os.path.join("res/sleep_walker.png"))
+        dukeCage = pg.image.load(os.path.join(character[2]["stand"]))
+        dc = pg.image.load(os.path.join("res/duke_cage.png"))
+        indianaBones = pg.image.load(os.path.join(character[3]["stand"]))
+        ib = pg.image.load(os.path.join("res/indiana_bones.png"))
+        lanaRoft = pg.image.load(os.path.join(character[4]["stand"]))
+        lr = pg.image.load(os.path.join("res/lana_roft.png"))
+        while not selected:
+            self.screen.blit(background2,background2.get_rect())
+            self.screen.blit(playerSelect,(220,20))
+            c1 = self.screen.blit(greenHorn,(130,70))
+            self.screen.blit(gh,(90,105 + greenHorn.get_rect().width))
+            c2 = self.screen.blit(sleepWalker,(360,70))
+            self.screen.blit(sw,(300,105 + sleepWalker.get_rect().width))
+            c3 = self.screen.blit(dukeCage,(580,70))
+            self.screen.blit(dc,(540,105 + dukeCage.get_rect().width))
+            c4 = self.screen.blit(indianaBones,(250,220))
+            self.screen.blit(ib,(190,265 + indianaBones.get_rect().width))
+            c5 = self.screen.blit(lanaRoft,(520,220))
+            self.screen.blit(lr,(480,265 + lanaRoft.get_rect().width))
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    sys.exit()
+                if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                    pos = pg.mouse.get_pos()
+                    if c1.collidepoint(pos):
+                        selected = True
+                    if c2.collidepoint(pos):
+                        charSelect(1)
+                        selected = True
+                    if c3.collidepoint(pos):
+                        charSelect(2)
+                        selected = True
+                    if c4.collidepoint(pos):
+                        charSelect(3)
+                        selected = True
+                    if c5.collidepoint(pos):
+                        charSelect(4)
+                        selected = True
             pg.display.update()
 
     def start(self):
@@ -349,6 +396,17 @@ def start(speed,size):
     global g
     g = game(speed)
     g.loop()
+
+def charSelect(option):
+    global stand,jump,hurt,duck,walk,life_img
+    c = character[option]
+    stand = pg.image.load(os.path.join(c["stand"]))
+    jump = pg.image.load(os.path.join(c["jump"]))
+    hurt = pg.image.load(os.path.join(c["hurt"]))
+    duck = pg.image.load(os.path.join(c["duck"]))
+    life_img = pg.image.load(os.path.join(c["life_img"]))
+    life_img = pg.transform.scale(life_img,(30,30))
+    walk = c["walk"]
 
 def make_text(screen,x, y, text, size=20, color = (0,0,0), a = False):
     txts = pg.font.SysFont('Courier New', size).render(text, True, color)
