@@ -1,3 +1,1 @@
-#Jungle Run
-
-
+# Jungle RunMy winter vacation pass time would love to see it grow and become a 4K game one day!### Requirements :+ PyGame library### Instructions :```bash# Clone this repositorygit clone https://github.com/Harshish/Anime-Downloader.git# Go into the repositorycd Jungle-Run# Install dependencies[sudo] pip install -r requirements.txt# Run the gamepython game.py```### TODOs :+ Fix frame rate issues + Add powerups+ Add characters/character-specific powerups+ Add difficulty and levels### Contributing :+ Fork the repo.+ Create a new branch named `<your_feature>`+ Commit changes and make a PR.+ PRs are welcome.

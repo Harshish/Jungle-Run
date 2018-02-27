@@ -4,7 +4,7 @@ from cx_Freeze import setup, Executable
 target = [Executable("game1.py",icon="game_icon.ico")]
 
 setup(
-    name="Surakshit Karo",
+    name="Jungle Run",
     version="1.0",
     author="CodeKillerX",
     options={"build_exe": {"packages":["pygame"],
